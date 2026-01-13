@@ -817,7 +817,7 @@ body {
         position: relative;
         overflow-y: auto; /* Enable scrolling on workspace container */
         height: calc(100vh - 50px - 48px); /* Height minus header & tabs */
-        padding-bottom: 90px; /* Space for fixed footer */
+        padding-bottom: 250px; /* Space for fixed footer */
     }
 
     /* Ensure scroll-area inside columns doesn't double scroll */
