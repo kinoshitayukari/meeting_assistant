@@ -83,6 +83,11 @@ class App {
         this.dom.transcriptionModelSelect = document.getElementById('transcriptionModelSelect');
         this.dom.aiModelSelect = document.getElementById('aiModelSelect');
 
+        // Layout Columns (for mobile tabs)
+        this.dom.transcriptColumn = document.querySelector('.transcript-column');
+        this.dom.aiColumn = document.querySelector('.ai-column');
+        this.dom.mobileTabs = document.querySelectorAll('.mobile-tab');
+
         // Outputs
         this.dom.summaryContent = document.getElementById('summaryContent');
         this.dom.actionItemList = document.getElementById('actionItemList');
@@ -118,11 +123,42 @@ class App {
         document.querySelectorAll('input[name="audioSource"]').forEach(radio => {
             radio.onchange = () => this.updateLayoutForMode(radio.value);
         });
+
+        // Mobile Tab Switching
+        this.dom.mobileTabs.forEach(tab => {
+            tab.onclick = () => this.switchMobileTab(tab.dataset.target);
+        });
+        
+        // Initial Mobile State
+        if (window.innerWidth <= 768) {
+            this.switchMobileTab('transcript');
+        }
     }
 
     // ==========================================
     // Layout Management
     // ==========================================
+
+    // ==========================================
+    // Layout Management
+    // ==========================================
+
+    switchMobileTab(target) {
+        // Update Tab Styles
+        this.dom.mobileTabs.forEach(tab => {
+            if(tab.dataset.target === target) tab.classList.add('active');
+            else tab.classList.remove('active');
+        });
+
+        // Show/Hide Columns
+        if (target === 'transcript') {
+            this.dom.transcriptColumn.classList.add('active-tab-view');
+            this.dom.aiColumn.classList.remove('active-tab-view');
+        } else {
+            this.dom.transcriptColumn.classList.remove('active-tab-view');
+            this.dom.aiColumn.classList.add('active-tab-view');
+        }
+    }
 
     updateLayoutForMode(mode) {
         if (mode === 'both') {
