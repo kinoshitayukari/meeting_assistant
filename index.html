@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groq Meeting Transcriber</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <h1>Groq Transcriber</h1>
+                </div>
+                <div class="badge">Whisper v3 Powered</div>
+            </div>
+            <div class="header-right">
+                <div id="statusIndicator" class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span class="status-text">Ready</span>
+                </div>
+                <div class="timer" id="recordingTimer">00:00</div>
+                <button id="downloadBtn" class="btn btn-icon" title="保存 (TXT)">📥</button>
+                <button id="themeBtn" class="btn btn-icon" title="テーマ切替">🌙</button>
+                <button id="settingsBtn" class="btn btn-icon" title="設定">⚙️</button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <!-- Transcript Column -->
+            <section class="column transcript-column">
+                <div class="column-header">
+                    <h2>文字起こし</h2>
+                    <div class="actions">
+                        <button id="copyBtn" class="btn btn-sm btn-ghost">コピー</button>
+                        <button id="clearBtn" class="btn btn-sm btn-ghost">クリア</button>
+                    </div>
+                </div>
+                
+                <!-- Single mode (mic or system only) -->
+                <div id="singleTranscriptArea" class="transcript-area">
+                    <div id="transcriptContainer" class="scroll-area">
+                        <div class="empty-state">
+                            <p>録音を開始すると、Groq Whisperがここに文字を起こします。</p>
+                            <p class="sub-text">※ 音声は数秒ごとのチャンクで送信され、解析後に表示されます。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dual mode (both sources) -->
+                <div id="dualTranscriptArea" class="transcript-area dual-mode" style="display: none;">
+                    <div class="dual-pane">
+                        <div class="pane-header">
+                            <span class="pane-icon">🖥️</span>
+                            <span class="pane-label">相手（システム音）</span>
+                        </div>
+                        <div id="systemTranscriptContainer" class="scroll-area">
+                            <div class="empty-state small">
+                                <p>相手の音声がここに表示されます</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dual-pane">
+                        <div class="pane-header">
+                            <span class="pane-icon">🎙️</span>
+                            <span class="pane-label">自分（マイク）</span>
+                        </div>
+                        <div id="micTranscriptContainer" class="scroll-area">
+                            <div class="empty-state small">
+                                <p>あなたの音声がここに表示されます</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Assist Column -->
+            <section class="column ai-column">
+                <div class="column-header">
+                    <h2>AI アシスタント</h2>
+                    <select id="aiModelSelect" class="model-select-sm">
+                        <option value="openai/gpt-oss-120b" selected>openai/gpt-oss-120b</option>
+                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                        <option value="llama3-8b-8192">Llama 3 8B</option>
+                    </select>
+                </div>
+                <div class="scroll-area">
+                    <div class="ai-card">
+                        <h3>要約</h3>
+                        <div id="summaryContent" class="ai-content placeholder">
+                            録音終了時、またはボタンクリックで生成されます...
+                        </div>
+                    </div>
+                    <div class="ai-card">
+                        <h3>アクションアイテム</h3>
+                        <ul id="actionItemList" class="action-list placeholder">
+                            <li>タスクがここに抽出されます</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="column-footer">
+                    <button id="generateAiBtn" class="btn btn-full btn-secondary" disabled>
+                        ✨ 分析を実行
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer Controls -->
+        <footer class="controls">
+            <div class="audio-source-selector">
+                <span class="source-label">音声ソース:</span>
+                <div class="source-options">
+                    <label class="source-option">
+                        <input type="radio" name="audioSource" value="mic" checked>
+                        <span class="option-icon">🎙️</span>
+                        <span class="option-text">マイク</span>
+                    </label>
+                    <label class="source-option">
+                        <input type="radio" name="audioSource" value="system">
+                        <span class="option-icon">🖥️</span>
+                        <span class="option-text">システム音</span>
+                    </label>
+                    <label class="source-option">
+                        <input type="radio" name="audioSource" value="both">
+                        <span class="option-icon">🎧</span>
+                        <span class="option-text">両方</span>
+                    </label>
+                </div>
+            </div>
+            <button id="recordBtn" class="btn btn-lg btn-primary btn-record">
+                <span class="icon">🎙️</span>
+                <span class="text">録音開始</span>
+            </button>
+            <div class="settings-preview">
+                <span id="currentModelInfo">Whisper Large v3</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>設定</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px;">
+                    <button class="back-modal-btn" style="flex: 0 0 auto; margin-top: 28px;">← 戻る</button>
+                    
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Groq API Key <span class="required">*</span></label>
+                        <input type="password" id="apiKeyInput" placeholder="gsk_..." autocomplete="off">
+                        <p class="hint">音声認識と要約の両方に使用します</p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>AI モデル (要約用)</label>
+                    <select id="aiModelSelectSettings" class="full-width">
+                        <option value="openai/gpt-oss-120b" selected>openai/gpt-oss-120b</option>
+                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                        <option value="llama3-8b-8192">Llama 3 8B</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>文字起こしモデル</label>
+                    <select id="transcriptionModelSelect" class="full-width">
+                        <option value="whisper-large-v3" selected>Whisper Large v3 (最高精度)</option>
+                        <option value="whisper-large-v3-turbo">Whisper Large v3 Turbo (高速)</option>
+                        <option value="distil-whisper-large-v3-en">Distil Whisper (英語のみ・超高速)</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label>文字起こし間隔 (秒)</label>
+                    <div class="range-input">
+                        <input type="range" id="chunkInterval" min="5" max="60" value="10">
+                        <span id="chunkValue">10秒</span>
+                    </div>
+                    <p class="hint">短いほどリアルタイムに近いですが、文脈が切れやすくなる可能性があります。</p>
+                </div>
+
+                <div class="form-group">
+                    <label>音声ソースについて</label>
+                    <div class="info-box">
+                        <p><strong>🎙️ マイク:</strong> あなたの声のみ録音</p>
+                        <p><strong>🖥️ システム音:</strong> 画面共有の音声のみ（Zoom/Meet相手の声など）</p>
+                        <p><strong>🎧 両方:</strong> マイク + システム音を同時録音</p>
+                        <p class="hint" style="margin-top: 8px;">※ Macでシステム音を使うには画面共有時に「システムオーディオを共有」を選択してください</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettingsBtn" class="btn btn-primary">保存して閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
